@@ -1,0 +1,2 @@
+analysis_date,total_days,total_tweets,sentiment_price_correlation,sentiment_return_correlation,avg_sentiment,avg_price,data_quality,api_usage
+2025-08-08T14:04:25.290390,1826,564376,-0.2545454226812415,-0.027428876889195833,0.1014093301674913,36286.0845304157,good,none_required

@@ -88,10 +88,24 @@ def run_training_pipeline():
     return True
 
 def run_prediction():
-    """Make a prediction using the trained model."""
+    """Make a prediction using the trained model with real Twitter integration."""
     print("\n" + "="*50)
     print("STEP 5: PREDICTION")
     print("="*50)
+    
+    # Check if Twitter API is available for real-time sentiment
+    try:
+        from scripts.scrape import TwitterScraper
+        scraper = TwitterScraper()
+        
+        if scraper.check_api_status():
+            print("🐦 Twitter API available - will use REAL sentiment data")
+        else:
+            print("⚠️ Twitter API not available - will use simulated sentiment data")
+            print("💡 To use real data, set X_BEARER_TOKEN in .env file")
+    except Exception as e:
+        print(f"⚠️ Twitter API check failed: {e}")
+        print("🔄 Will use simulated sentiment data")
     
     predictor = BitcoinPredictor()
     result = predictor.run_prediction_pipeline()

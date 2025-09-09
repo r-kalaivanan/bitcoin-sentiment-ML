@@ -76,7 +76,11 @@ class BitcoinPredictor:
             
             # Get latest sentiment data
             analyzer = SentimentAnalyzer()
-            sentiment_data = analyzer.run_sentiment_pipeline(historical=False, scrape_recent=True)
+            latest_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+            sentiment_data = analyzer.create_sentiment_for_prediction(target_date=latest_date)
+            
+            print(f"🔍 Sentiment data shape: {sentiment_data.shape if not sentiment_data.empty else 'EMPTY'}")
+            print(f"🔍 Sentiment data columns: {list(sentiment_data.columns) if not sentiment_data.empty else 'NONE'}")
             
             # Merge data
             merger = DataMerger()
@@ -95,14 +99,38 @@ class BitcoinPredictor:
                 print("⚠️ Sentiment data not available, using price features only")
             
             # Get the most recent complete row (not the last row which might have NaN target)
-            latest_data = latest_data.dropna(subset=[col for col in latest_data.columns 
-                                                   if col in self.selected_features])
+            print(f"🔍 Data shape before filtering: {latest_data.shape}")
+            print(f"🔍 Selected features count: {len(self.selected_features)}")
             
-            if len(latest_data) == 0:
+            # Check which features are missing
+            missing_features = [col for col in self.selected_features if col not in latest_data.columns]
+            if missing_features:
+                print(f"⚠️ Missing features: {missing_features[:10]}...")  # Show first 10
+            
+            # Check for NaN values in selected features
+            available_features = [col for col in self.selected_features if col in latest_data.columns]
+            latest_data_filtered = latest_data.dropna(subset=available_features)
+            
+            print(f"🔍 Data shape after NaN filtering: {latest_data_filtered.shape}")
+            
+            if len(latest_data_filtered) == 0:
+                # If no complete rows, take the last row and fill NaN with neutral values
+                print("⚠️ No complete rows found, using last row with NaN handling")
+                latest_data_filtered = latest_data.iloc[-1:].copy()
+                
+                # Fill NaN values with neutral/default values
+                for col in available_features:
+                    if pd.isna(latest_data_filtered[col].iloc[0]):
+                        if 'sentiment' in col.lower():
+                            latest_data_filtered[col] = 0.0  # Neutral sentiment
+                        else:
+                            latest_data_filtered[col] = latest_data_filtered[col].fillna(method='bfill').fillna(0)
+            
+            if len(latest_data_filtered) == 0:
                 raise ValueError("No valid data available for prediction")
             
             # Take the last complete row
-            self.latest_data = latest_data.iloc[-1:].copy()
+            self.latest_data = latest_data_filtered.iloc[-1:].copy()
             
             print(f"✅ Retrieved latest data for {self.latest_data['Date'].iloc[0]}")
             return True
@@ -130,20 +158,38 @@ class BitcoinPredictor:
                         self.latest_data[feature] = 0.0  # Default value
             
             # Extract features in the correct order
-            self.X_latest = self.latest_data[self.selected_features].copy()
+            print(f"🔍 Latest data columns sample: {list(self.latest_data.columns)[:15]}...")
+            print(f"🔍 Selected features sample: {self.selected_features[:10]}...")
+            print(f"🔍 Missing features: {[f for f in self.selected_features if f not in self.latest_data.columns][:10]}")
             
-            # Handle any remaining missing values
-            self.X_latest = self.X_latest.fillna(0)
+            # Handle any remaining missing values in the full dataset
+            self.latest_data = self.latest_data.fillna(0)
             
-            # Scale features
-            self.X_latest_scaled = pd.DataFrame(
-                self.scaler.transform(self.X_latest),
-                columns=self.X_latest.columns,
-                index=self.X_latest.index
-            )
-            
-            print(f"✅ Features prepared for prediction")
-            return True
+            # Scale features using ALL features (as the scaler was trained)
+            try:
+                # Remove target columns and Date column before scaling
+                features_to_scale = self.latest_data.drop(columns=['Date', 'TARGET', 'TARGET_2D', 'TARGET_STRONG'], errors='ignore')
+                
+                print(f"🔍 Features to scale: {features_to_scale.shape[1]} columns")
+                print(f"🔍 Scaler expects: {len(self.scaler.feature_names_in_)} columns")
+                
+                # First, scale ALL features
+                all_features_scaled = pd.DataFrame(
+                    self.scaler.transform(features_to_scale),
+                    columns=self.scaler.feature_names_in_,
+                    index=self.latest_data.index
+                )
+                
+                # Then select only the features we need for prediction
+                self.X_latest_scaled = all_features_scaled[self.selected_features].copy()
+                
+                print(f"✅ Features prepared for prediction (scaled {len(self.scaler.feature_names_in_)} → selected {len(self.selected_features)})")
+                return True
+            except Exception as scaler_error:
+                print(f"❌ Scaler error: {str(scaler_error)}")
+                print(f"🔍 Scaler expects {len(self.scaler.feature_names_in_)} features")
+                print(f"🔍 Features to scale has {features_to_scale.shape[1] if 'features_to_scale' in locals() else 'unknown'} features")
+                return False
             
         except Exception as e:
             print(f"❌ Error preparing features: {str(e)}")

@@ -171,8 +171,8 @@ class SentimentAnalyzer:
             DataFrame: Daily sentiment features
         """
         if tweets_df.empty:
-            print("❌ No tweets to aggregate")
-            return pd.DataFrame()
+            print("❌ No tweets to aggregate. Creating simulated sentiment...")
+            return self.create_sentiment_features_historical()
         
         print("📊 Creating daily sentiment aggregations...")
         
@@ -257,6 +257,9 @@ class SentimentAnalyzer:
         
         sentiment_df = pd.DataFrame(sentiment_data)
         
+        # Ensure date column is datetime type to match price data
+        sentiment_df['date'] = pd.to_datetime(sentiment_df['date'])
+        
         # Add rolling features
         sentiment_df['sentiment_ma_7'] = sentiment_df['compound_mean'].rolling(7).mean()
         sentiment_df['sentiment_ma_14'] = sentiment_df['compound_mean'].rolling(14).mean()
@@ -309,6 +312,122 @@ class SentimentAnalyzer:
         else:
             print("❌ No sentiment data created")
             return pd.DataFrame()
+    
+    def create_sentiment_for_prediction(self, target_date=None):
+        """
+        Create sentiment features for a specific date (for prediction).
+        Falls back to simulated data if no real data available.
+        
+        Args:
+            target_date: Date for prediction (default: yesterday)
+            
+        Returns:
+            DataFrame: Single row with sentiment features for the target date
+        """
+        if target_date is None:
+            target_date = (datetime.now() - timedelta(days=1)).date()
+        elif isinstance(target_date, str):
+            target_date = datetime.strptime(target_date, '%Y-%m-%d').date()
+        
+        print(f"🔮 Creating sentiment features for prediction date: {target_date}")
+        
+        # Try to get REAL Twitter data first
+        if self.client:
+            try:
+                print("🐦 Attempting to get real Twitter data...")
+                
+                # Import with absolute path to avoid relative import issues
+                import sys
+                import os
+                sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+                from scrape import get_live_tweets_for_prediction
+                
+                # Get live tweets
+                recent_tweets = get_live_tweets_for_prediction()
+                
+                if not recent_tweets.empty:
+                    print(f"✅ Found {len(recent_tweets)} real tweets for sentiment analysis")
+                    
+                    # Process real tweets
+                    tweets_with_sentiment = self.process_tweets_sentiment(recent_tweets)
+                    
+                    if not tweets_with_sentiment.empty:
+                        # Create daily sentiment from real tweets
+                        daily_sentiment = self.create_daily_sentiment_features(tweets_with_sentiment)
+                        
+                        # If we have data for the target date, use it
+                        target_sentiment = daily_sentiment[daily_sentiment['date'] == target_date]
+                        
+                        if not target_sentiment.empty:
+                            print(f"🎯 Using REAL sentiment data for {target_date}")
+                            return target_sentiment
+                        else:
+                            print(f"⚠️ No real sentiment for exact date {target_date}, using latest available")
+                            # Use the most recent sentiment data
+                            latest_sentiment = daily_sentiment.iloc[-1:].copy()
+                            latest_sentiment['date'] = pd.to_datetime(target_date)
+                            return latest_sentiment
+                            
+            except Exception as e:
+                print(f"⚠️ Could not get real sentiment data: {e}")
+                print("🔄 Falling back to simulated sentiment...")
+        else:
+            print("⚠️ Twitter API not configured, using simulated sentiment")
+        
+        # Fallback to simulated data with enhanced realism
+        print(f"🎭 Creating simulated sentiment for {target_date}")
+        
+        # For rolling features, we need some historical context
+        # Create 14 days of simulated data ending at target_date
+        date_range = pd.date_range(end=target_date, periods=14, freq='D')
+        
+        sentiment_data = []
+        
+        for date in date_range:
+            # Generate consistent but date-specific seed
+            np.random.seed(hash(str(date)) % 2**32)
+            
+            compound_mean = np.random.normal(0.05, 0.15)  # Slightly positive bias
+            
+            sentiment_data.append({
+                'date': date,
+                'compound_mean': compound_mean,
+                'compound_std': np.random.gamma(0.5, 0.2),
+                'positive_mean': np.random.beta(2, 5),
+                'negative_mean': np.random.beta(2, 8),
+                'neutral_mean': np.random.beta(5, 3),
+                'total_tweets': np.random.poisson(250),
+                'engagement_score_sum': np.random.exponential(4000),
+                'sentiment_positive_ratio': np.random.beta(3, 4),
+                'sentiment_negative_ratio': np.random.beta(2, 6),
+                'sentiment_neutral_ratio': np.random.beta(4, 3),
+                'sentiment_volatility': np.random.gamma(0.5, 0.2),
+                'weighted_sentiment': compound_mean * np.log1p(np.random.randint(50, 500))
+            })
+        
+        df = pd.DataFrame(sentiment_data)
+        # Ensure date column is datetime type to match price data
+        df['date'] = pd.to_datetime(df['date'])
+        
+        # Add rolling features like in historical data
+        df['sentiment_ma_7'] = df['compound_mean'].rolling(7, min_periods=1).mean()
+        df['sentiment_ma_14'] = df['compound_mean'].rolling(14, min_periods=1).mean()
+        df['sentiment_momentum'] = df['compound_mean'] - df['sentiment_ma_7']
+        
+        # Return only the target date row but with computed rolling features
+        target_row = df[df['date'].dt.date == pd.to_datetime(target_date).date()]
+        
+        print(f"🔍 Total sentiment rows: {len(df)}, Target rows: {len(target_row)}")
+        print(f"🔍 Date range: {df['date'].min()} to {df['date'].max()}")
+        print(f"🔍 Looking for: {target_date}")
+        
+        if target_row.empty:
+            print("⚠️ Target date not found, returning last row")
+            target_row = df.iloc[-1:].copy()
+        
+        print(f"✅ Created simulated sentiment features for {target_date}")
+        
+        return target_row
 
 if __name__ == "__main__":
     # Create sentiment analyzer and run pipeline

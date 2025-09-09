@@ -1,0 +1,2 @@
+model_name,accuracy,features_used,training_date
+random_forest_optimized,0.524390243902439,106,2025-08-11T16:52:05.320765
