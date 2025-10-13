@@ -5,9 +5,6 @@ Clean launch script for cloud deployment
 """
 
 import streamlit as st
-import sys
-import os
-from pathlib import Path
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
@@ -17,7 +14,6 @@ import warnings
 
 # Suppress warnings for cleaner display
 warnings.filterwarnings('ignore')
-st.set_option('deprecation.showPyplotGlobalUse', False)
 
 # Configure page
 st.set_page_config(
@@ -26,11 +22,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-
-# Add scripts directory to path
-project_root = Path(__file__).parent
-scripts_dir = project_root / "scripts"
-sys.path.insert(0, str(scripts_dir))
 
 def create_demo_dashboard():
     """Create a clean demo dashboard for Streamlit Cloud."""

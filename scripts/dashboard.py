@@ -118,19 +118,44 @@ class BitcoinSentimentDashboard:
     def load_models_and_data(self):
         """Load trained models and historical data with error handling."""
         try:
-            # Load updated models first, fallback to original
-            if os.path.exists('models/lightgbm_updated.pkl'):
-                self.model = joblib.load('models/lightgbm_updated.pkl')
-                self.model_name = "LightGBM (Updated)"
-                print("✅ Loaded updated LightGBM model")
-            else:
-                model_files = [f for f in os.listdir('models') if f.endswith('.pkl') and 'best' in f]
-                if model_files:
-                    self.model = joblib.load(f'models/{model_files[0]}')
-                    self.model_name = model_files[0].replace('.pkl', '')
-                    print(f"⚠️  Using original model: {model_files[0]}")
-                else:
-                    st.warning("⚠️ No trained models found")
+            # Load sentiment enhanced models first, then fallback
+            model_priority = [
+                'models/lightgbm_sentiment_enhanced.pkl',
+                'models/xgboost_sentiment_enhanced.pkl',
+                'models/lightgbm_updated.pkl',
+                'models/lightgbm_best.pkl'
+            ]
+            
+            self.model = None
+            self.model_name = "No Model"
+            
+            # Try to load models in priority order
+            for model_path in model_priority:
+                if os.path.exists(model_path):
+                    try:
+                        self.model = joblib.load(model_path)
+                        self.model_name = os.path.basename(model_path).replace('.pkl', '').replace('_', ' ').title()
+                        print(f"✅ Loaded model: {model_path}")
+                        break
+                    except Exception as e:
+                        print(f"❌ Failed to load {model_path}: {e}")
+                        continue
+            
+            # If no priority models found, try any .pkl file in models directory
+            if self.model is None:
+                try:
+                    model_files = [f for f in os.listdir('models') if f.endswith('.pkl')]
+                    if model_files:
+                        model_path = f'models/{model_files[0]}'
+                        self.model = joblib.load(model_path)
+                        self.model_name = model_files[0].replace('.pkl', '').replace('_', ' ').title()
+                        print(f"✅ Loaded fallback model: {model_path}")
+                    else:
+                        print("❌ No .pkl model files found in models directory")
+                        self.model = None
+                        self.model_name = "No Model"
+                except Exception as e:
+                    print(f"❌ Error loading models: {e}")
                     self.model = None
                     self.model_name = "No Model"
                     

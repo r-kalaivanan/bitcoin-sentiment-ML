@@ -1,11 +1,10 @@
-# Streamlit Cloud Configuration
-# This file configures the Streamlit Cloud deployment
+# Streamlit Configuration
+# Clean configuration without deprecated options
 
 [global]
 developmentMode = false
 
 [server]
-runOnSave = false
 port = 8501
 headless = true
 
@@ -20,12 +19,3 @@ textColor = "#262730"
 
 [logger]
 level = "info"
-
-[client]
-caching = true
-showErrorDetails = false
-
-[runner]
-magicEnabled = true
-installTracer = false
-fixMatplotlib = true
