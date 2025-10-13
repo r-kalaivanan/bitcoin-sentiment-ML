@@ -1,0 +1,31 @@
+# Streamlit Cloud Configuration
+# This file configures the Streamlit Cloud deployment
+
+[global]
+developmentMode = false
+
+[server]
+runOnSave = false
+port = 8501
+headless = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+primaryColor = "#F7931A"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+
+[logger]
+level = "info"
+
+[client]
+caching = true
+showErrorDetails = false
+
+[runner]
+magicEnabled = true
+installTracer = false
+fixMatplotlib = true

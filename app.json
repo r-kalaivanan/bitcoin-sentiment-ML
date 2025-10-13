@@ -1,0 +1,47 @@
+{
+  "name": "Bitcoin Sentiment ML Dashboard",
+  "description": "Advanced Bitcoin price prediction system using machine learning and sentiment analysis",
+  "image": "heroku/python",
+  "repository": "https://github.com/r-kalaivanan/bitcoin-sentiment-ML",
+  "keywords": [
+    "bitcoin",
+    "machine-learning",
+    "sentiment-analysis",
+    "cryptocurrency",
+    "streamlit"
+  ],
+  "addons": [
+    {
+      "plan": "heroku-redis:mini",
+      "options": {
+        "version": "7"
+      }
+    }
+  ],
+  "env": {
+    "STREAMLIT_SERVER_HEADLESS": {
+      "description": "Run in headless mode",
+      "value": "true"
+    },
+    "STREAMLIT_BROWSER_GATHER_USAGE_STATS": {
+      "description": "Disable usage stats",
+      "value": "false"
+    },
+    "PYTHONPATH": {
+      "description": "Python path",
+      "value": "/app"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "stack": "heroku-22"
+}

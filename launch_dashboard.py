@@ -1,58 +1,44 @@
 #!/usr/bin/env python3
 """
-Simple Dashboard Launch Script
-Launches the Bitcoin Sentiment ML Dashboard
+Bitcoin Sentiment ML Dashboard
+Streamlit Cloud optimized launch script
 """
 
-import subprocess
+import streamlit as st
 import sys
 import os
 from pathlib import Path
-import webbrowser
-import time
 
-def launch_dashboard():
-    """Launch the streamlit dashboard with proper error handling."""
-    print("🚀 Launching Bitcoin Sentiment ML Dashboard...")
-    
-    # Change to project directory
-    project_dir = Path(__file__).parent.parent
-    os.chdir(project_dir)
-    print(f"📁 Working directory: {project_dir}")
-    
-    # Check if streamlit is available
+# Configure page first
+st.set_page_config(
+    page_title="Bitcoin Sentiment ML Dashboard",
+    page_icon="₿",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Add the scripts directory to Python path
+project_root = Path(__file__).parent
+scripts_dir = project_root / "scripts"
+sys.path.insert(0, str(scripts_dir))
+
+def main():
+    """Main function to launch the dashboard."""
     try:
-        result = subprocess.run([sys.executable, "-c", "import streamlit"], 
-                              capture_output=True, text=True)
-        if result.returncode != 0:
-            print("❌ Streamlit not found. Installing...")
-            subprocess.run([sys.executable, "-m", "pip", "install", "streamlit"])
+        # Import and run the dashboard
+        from dashboard import main as dashboard_main
+        
+        # Run the dashboard
+        dashboard_main()
+        
+    except ImportError as e:
+        st.error(f"❌ Import Error: {e}")
+        st.info("🔧 Make sure all required packages are installed from requirements.txt")
+        st.code("pip install -r requirements.txt")
     except Exception as e:
-        print(f"⚠️  Warning: {e}")
-    
-    # Launch dashboard
-    try:
-        print("🌐 Starting Streamlit server...")
-        print("📊 Dashboard will open at: http://localhost:8501")
-        print("🔄 Press Ctrl+C to stop the server")
-        
-        # Open browser after a delay
-        def open_browser():
-            time.sleep(3)
-            webbrowser.open("http://localhost:8501")
-        
-        import threading
-        browser_thread = threading.Thread(target=open_browser)
-        browser_thread.start()
-        
-        # Run streamlit
-        subprocess.run([sys.executable, "-m", "streamlit", "run", "scripts/dashboard.py"])
-        
-    except KeyboardInterrupt:
-        print("\n👋 Dashboard stopped by user")
-    except Exception as e:
-        print(f"❌ Error launching dashboard: {e}")
-        print("💡 Try running manually: streamlit run scripts/dashboard.py")
+        st.error(f"❌ Application Error: {e}")
+        st.info("🔍 Check the console for detailed error information")
+        st.exception(e)
 
 if __name__ == "__main__":
-    launch_dashboard()
+    main()
