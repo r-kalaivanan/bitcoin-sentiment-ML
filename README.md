@@ -1,339 +1,111 @@
-# ₿ Bitcoin Price Prediction ML System
+# 🚀 Bitcoin Sentiment ML - Advanced Prediction System
 
-**Advanced Machine Learning for Cryptocurrency Forecasting**
+A professional Bitcoin price prediction system using machine learning and sentiment analysis from social media and news sources.
 
-[![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://python.org)
-[![Machine Learning](https://img.shields.io/badge/ML-LightGBM-green.svg)](https://lightgbm.readthedocs.io/)
-[![Status](https://img.shields.io/badge/Status-Production%20Ready-success.svg)](http://localhost:8506)
-[![Accuracy](https://img.shields.io/badge/Accuracy-51.72%25-orange.svg)](models/)
+## ✨ Key Features
 
-## 🎯 **Project Overview**
+- 🧠 **Sentiment Analysis**: 55 advanced sentiment features from Twitter, Reddit, and news
+- 🤖 **7 ML Models**: Enhanced ensemble with LightGBM, XGBoost, Random Forest, and more
+- 📊 **Professional Dashboard**: 6-tab Streamlit interface with real-time predictions
+- 🎯 **High Accuracy**: 56.55% validation accuracy with sentiment-enhanced models
+- 🔄 **Real-time Data**: Live Bitcoin price updates and sentiment processing
 
-A comprehensive machine learning system that predicts Bitcoin price movements using advanced algorithms and sentiment analysis. The system combines historical price data, technical indicators, and market sentiment to generate accurate 7-day price forecasts.
+## 🚀 Quick Start
 
-### ✨ **Key Features**
-
-- **🔮 Future Price Predictions**: 7-day Bitcoin forecasting with confidence scores
-- **🎯 Model Accuracy Tracking**: Real-time performance evaluation
-- **� Technical Analysis**: Professional trading indicators (RSI, Bollinger Bands, Moving Averages)
-- **🤖 Multi-Algorithm Approach**: 5 ML models with ensemble capabilities
-- **📊 Interactive Dashboard**: Educational web interface with comprehensive explanations
-
----
-
-## � **Quick Start**
-
-### Prerequisites
-
-- Python 3.11+
-- Virtual environment (recommended)
-
-### Installation
-
+### 1. Install Dependencies
 ```bash
-# Clone the repository
-git clone https://github.com/r-kalaivanan/bitcoin-sentiment-ML.git
-cd bitcoin-sentiment-ML
-
-# Create virtual environment
-python -m venv venv
-.\venv\Scripts\Activate.ps1  # Windows
-# source venv/bin/activate    # Linux/Mac
-
-# Install dependencies
 pip install -r requirements.txt
+```
 
-# Run the dashboard
+### 2. Launch Dashboard
+```bash
+# Easy launch (recommended)
+python launch_dashboard.py
+
+# Or direct launch
 streamlit run scripts/dashboard.py
 ```
 
-### Access the System
+### 3. Access Dashboard
+Open your browser to: **http://localhost:8501**
 
-- **Dashboard URL**: http://localhost:8501
-- **Features**: Future predictions, accuracy analysis, technical charts
+## 📊 Dashboard Features
 
----
+- **🔮 Future Predictions**: 7-day Bitcoin price forecasts with confidence scoring
+- **🎯 Model Accuracy**: Performance analysis and validation metrics
+- **📈 Price Analysis**: Technical indicators and trend visualization  
+- **🧠 Sentiment Analysis**: Real-time sentiment indicators and model weights
+- **🤖 Model Performance**: Detailed comparison of all ML algorithms
+- **📊 System Overview**: Complete project statistics and architecture
 
-## 🏗️ **System Architecture**
-
-### **Data Pipeline**
-
-```mermaid
-graph LR
-    A[Yahoo Finance API] --> B[Data Processing]
-    C[Technical Indicators] --> B
-    D[Sentiment Data] --> B
-    B --> E[Feature Engineering]
-    E --> F[ML Models]
-    F --> G[Predictions]
-    G --> H[Dashboard]
-```
-
-### **Machine Learning Models**
-
-| Model              | Accuracy   | Purpose                       |
-| ------------------ | ---------- | ----------------------------- |
-| **LightGBM**       | **51.72%** | Primary prediction engine     |
-| RandomForest       | 49.75%     | Ensemble component            |
-| XGBoost            | 49.51%     | Gradient boosting             |
-| LogisticRegression | 50.99%     | Baseline comparison           |
-| SVM                | 48.03%     | Support vector classification |
-
----
-
-## 📊 **Performance Metrics**
-
-### **Current System Status** (Updated: Sept 8, 2025)
-
-- **✅ Data Coverage**: 2,076 days (2020-2025)
-- **✅ Current Bitcoin Price**: $110,224.70 (99.34% market accuracy)
-- **✅ Prediction Accuracy**: 51.72% (beats random chance)
-- **✅ Response Time**: <1 second
-- **✅ Features**: 18 technical indicators
-
-### **Model Performance**
-
-- **Directional Accuracy**: 51.72% (UP/DOWN predictions)
-- **Price Estimation**: ±2.3% average deviation
-- **Confidence Scoring**: 55-85% range
-- **Update Frequency**: Daily data refresh
-
----
-
-## 📁 **Project Structure**
+## 🛠️ Project Structure
 
 ```
 bitcoin-sentiment-ml/
-├── data/                     # Dataset files
-│   ├── btc_data.csv         # Historical Bitcoin prices (2020-2025)
-│   └── *.csv                # Feature datasets
-├── models/                   # Trained ML models
-│   ├── lightgbm_updated.pkl # Best performing model
-│   └── *_updated.pkl        # All trained models
-├── scripts/                  # Python modules
-│   ├── dashboard.py         # Main Streamlit application
-│   ├── retrain_models.py    # Model training pipeline
-│   ├── update_bitcoin_data.py # Data refresh script
-│   └── *.py                 # Utility scripts
-├── predictions/              # Model outputs
-├── requirements.txt          # Python dependencies
-└── README.md                # This file
+├── scripts/           # Core application code
+├── data/             # Bitcoin price and sentiment data
+├── models/           # Trained ML models and scalers
+├── launch_dashboard.py  # Easy dashboard launcher
+├── test_integration.py  # System validation tests
+└── requirements.txt  # Python dependencies
 ```
 
----
+## 🧪 Testing
 
-## 🎨 **Dashboard Interface**
-
-### **5-Tab Professional Interface**
-
-#### 🔮 **Tab 1: Future Price Predictions**
-
-- 7-day Bitcoin price forecasts
-- Interactive price charts (historical + predicted)
-- Daily prediction cards with confidence scores
-- Educational explanations for all components
-
-#### 🎯 **Tab 2: Model Accuracy Analysis**
-
-- Past predictions vs actual prices comparison
-- Performance metrics and accuracy tracking
-- Detailed results table with success indicators
-- Visual accuracy assessment charts
-
-#### 📈 **Tab 3: Price Trend Analysis**
-
-- Long-term Bitcoin price movements
-- Technical indicators (RSI, Moving Averages, Bollinger Bands)
-- Trend analysis and market condition assessment
-- Professional trading insights
-
-#### 🤖 **Tab 4: Model Performance**
-
-- Algorithm comparison and benchmarking
-- Performance metrics explanation
-- Model selection rationale
-- Technical specifications
-
-#### 📊 **Tab 5: System Overview**
-
-- Complete architecture documentation
-- Data sources and processing pipeline
-- Technical specifications and performance stats
-- Educational content for learning
-
----
-
-## 🛠️ **Technical Implementation**
-
-### **Feature Engineering**
-
-```python
-def create_advanced_features(data):
-    """18 technical indicators for ML models"""
-    # Price-based features
-    data['returns'] = data['Close'].pct_change()
-    data['volatility'] = data['returns'].rolling(20).std()
-
-    # Moving averages
-    for window in [5, 10, 20, 50]:
-        data[f'ma_{window}'] = data['Close'].rolling(window).mean()
-        data[f'ma_ratio_{window}'] = data['Close'] / data[f'ma_{window}']
-
-    # Technical indicators
-    data['rsi'] = calculate_rsi(data['Close'])
-    data['bb_ratio'] = calculate_bollinger_bands(data['Close'])
-    data['volume_ratio'] = data['Volume'] / data['Volume'].rolling(20).mean()
-
-    return data
+Run comprehensive system tests:
+```bash
+python test_integration.py
 ```
 
-### **Model Training Pipeline**
+## 📈 Model Performance
 
-```python
-def train_ensemble_models():
-    """Multi-algorithm training with cross-validation"""
-    models = {
-        'LightGBM': lgb.LGBMClassifier(),
-        'XGBoost': xgb.XGBClassifier(),
-        'RandomForest': RandomForestClassifier(),
-        'LogisticRegression': LogisticRegression(),
-        'SVM': SVC(probability=True)
-    }
+| Model | Accuracy | Features | Type |
+|-------|----------|----------|------|
+| **SVM Enhanced** | 56.55% | 76 | Sentiment + Technical |
+| **LightGBM Enhanced** | 56.12% | 76 | Sentiment + Technical |
+| **XGBoost Enhanced** | 55.89% | 76 | Sentiment + Technical |
+| **Ensemble Weighted** | 55.34% | 76 | Combined Models |
 
-    # Time series cross-validation
-    for name, model in models.items():
-        model.fit(X_train, y_train)
-        accuracy = evaluate_model(model, X_test, y_test)
-        save_model(model, f'models/{name}_updated.pkl')
-```
+## 🔧 Advanced Features
 
----
+- **Dynamic Ensemble Weighting**: Models weighted by real-time performance
+- **Market Regime Detection**: Adaptive prediction for bull/bear/sideways markets
+- **Sentiment Integration**: 55 sophisticated sentiment indicators
+- **Error Handling**: Robust fallback mechanisms for production reliability
+- **Educational Interface**: Detailed explanations of ML methodology
 
-## 📈 **Usage Examples**
+## 📚 Technical Details
 
-### **Generate 7-Day Predictions**
+### Sentiment Features (55)
+- Social media mood analysis
+- News sentiment processing  
+- Market psychology indicators
+- Sentiment momentum tracking
+- Bull/bear sentiment ratios
 
-```python
-from scripts.dashboard import BitcoinSentimentDashboard
+### Technical Features (21)
+- Price action indicators
+- Volume analysis
+- Volatility measurements
+- Moving averages & RSI
+- Market trend classification
 
-dashboard = BitcoinSentimentDashboard()
-predictions = dashboard.predict_future_prices(days=7)
-print(predictions[['date', 'predicted_price', 'direction', 'confidence']])
-```
+## 🎯 Results
 
-### **Model Performance Analysis**
+- **Enhanced Accuracy**: 9.3% improvement over baseline models
+- **Comprehensive Analysis**: 76 features vs 18 in standard models
+- **Real-time Processing**: Live sentiment and price integration
+- **Professional Interface**: Production-ready dashboard system
 
-```python
-from scripts.retrain_models import retrain_models
+## 🚀 Next Steps
 
-# Retrain all models with latest data
-results = retrain_models()
-print(f"Best model: {results['best_model']} with {results['accuracy']:.2%} accuracy")
-```
-
-### **Data Updates**
-
-```python
-from scripts.update_bitcoin_data import update_bitcoin_data
-
-# Fetch latest Bitcoin prices
-update_bitcoin_data()
-print("✅ Data updated with current market prices")
-```
+1. **Explore Dashboard**: Try all 6 tabs for complete functionality
+2. **Test Predictions**: Generate 7-day Bitcoin forecasts
+3. **Analyze Sentiment**: Review real-time sentiment indicators
+4. **Compare Models**: Examine ensemble weights and performance
 
 ---
 
-## 🔧 **Configuration**
-
-### **Environment Variables** (Optional)
-
-```env
-TWITTER_BEARER_TOKEN=your_token_here    # For sentiment analysis
-REDDIT_CLIENT_ID=your_client_id         # For social media data
-NEWS_API_KEY=your_api_key               # For news sentiment
-```
-
-### **Model Configuration**
-
-```python
-# models/config.py
-MODEL_PARAMS = {
-    'lightgbm': {
-        'n_estimators': 100,
-        'learning_rate': 0.1,
-        'max_depth': 6,
-        'random_state': 42
-    }
-}
-```
-
----
-
-## 📚 **Educational Value**
-
-### **Learning Outcomes**
-
-- **Machine Learning**: Algorithm selection, hyperparameter tuning, ensemble methods
-- **Time Series Analysis**: Financial forecasting, trend analysis, seasonality
-- **Data Engineering**: ETL pipelines, data quality, real-time processing
-- **Software Engineering**: Production deployment, error handling, scalability
-- **Financial Analysis**: Technical indicators, market sentiment, risk assessment
-
-### **Skills Demonstrated**
-
-- **Python Programming**: pandas, scikit-learn, streamlit, plotly
-- **Statistical Analysis**: Performance evaluation, confidence intervals
-- **Data Visualization**: Interactive charts, professional dashboards
-- **System Design**: Modular architecture, maintainable code
-- **Documentation**: Technical writing, user guides, API documentation
-
----
-
-## 🏆 **Key Achievements**
-
-### **Technical Excellence**
-
-- ✅ **51.72% Prediction Accuracy** (beats random chance, matches industry standards)
-- ✅ **Real-time Data Integration** (current Bitcoin prices, daily updates)
-- ✅ **Production-Grade Architecture** (error handling, scalability, monitoring)
-- ✅ **Comprehensive Documentation** (technical specs, user guides, educational content)
-
-### **Innovation Highlights**
-
-- ✅ **Educational Interface** (self-explaining system for learning)
-- ✅ **Multi-Modal Analysis** (price + sentiment + technical indicators)
-- ✅ **Professional Deployment** (web application, interactive visualizations)
-- ✅ **Academic & Industry Relevance** (FinTech applications, research contributions)
-
----
-
-## 📞 **Support & Contact**
-
-### **Documentation**
-
-- **Technical Specifications**: `TECHNICAL_DOCUMENTATION_FACULTY.md`
-- **Faculty Presentation**: `FACULTY_PRESENTATION_SUMMARY.md`
-- **API Documentation**: Available in code comments
-
-### **System Status**
-
-- **Current Status**: ✅ Production Ready
-- **Last Updated**: September 8, 2025
-- **Dashboard URL**: http://localhost:8506
-- **Model Performance**: 51.72% accuracy
-
-### **Contributors**
-
-- **Data Engineering Team**: Data pipeline and ETL processes
-- **Machine Learning Team**: Model development and optimization
-- **Production Systems Team**: Deployment and infrastructure
-
----
-
-## 📜 **License**
-
-This project is developed for academic purposes and educational use.
-
----
-
-**🎓 Ready for Faculty Demonstration | 🚀 Production-Ready System | 📊 Advanced ML Implementation**
+*Bitcoin Sentiment ML - Advanced Prediction System*  
+*Developed: October 2025*  
+*Status: Production Ready ✅*

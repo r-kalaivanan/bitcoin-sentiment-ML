@@ -1,2 +1,0 @@
-date,current_price,prediction,confidence,probability_up,probability_down,model
-2025-09-05,110650.984375,DOWN,0.837329802845167,0.16267019715483294,0.837329802845167,LightGBM
