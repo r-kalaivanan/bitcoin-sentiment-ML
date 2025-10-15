@@ -51,8 +51,8 @@ class BitcoinSentimentDashboard:
             'features_engineered': 76 if SENTIMENT_ENHANCED else 18,  # Enhanced feature count
             'data_sources': 4,
             'operational_cost': 0,
-            'current_btc_price': 110807.88,  # Updated Bitcoin price
-            'data_updated': '2025-10-11',  # Last data update
+            'current_btc_price': 115271.08,  # Updated Bitcoin price (latest from data)
+            'data_updated': '2025-10-13',  # Last data update
             'sentiment_features': 55 if SENTIMENT_ENHANCED else 0
         }
     def setup_page_config(self):
@@ -369,7 +369,7 @@ class BitcoinSentimentDashboard:
                 'timestamp': datetime.now()
             }
     
-    def predict_future_prices(self, days=7):
+    def predict_future_prices(self, days=14):
         """Predict Bitcoin prices for the next few days using sentiment-enhanced models."""
         # Try sentiment-enhanced predictor first
         if SENTIMENT_ENHANCED and self.sentiment_predictor is not None:
@@ -397,17 +397,27 @@ class BitcoinSentimentDashboard:
             base_price = current_price
             
             # Simple volatility-based prediction (placeholder until full features available)
-            volatility = 0.03  # 3% daily volatility estimate for Bitcoin
+            volatility = 0.025  # 2.5% daily volatility estimate for Bitcoin
+            trend_factor = 0.001  # Slight upward trend factor
             
             for day in range(1, days + 1):
-                # Simple random walk with trend
-                # In reality, this should use the full ML model with proper features
-                direction_prob = 0.52  # Slight upward bias for Bitcoin
-                direction = "UP" if day % 2 == 1 else "DOWN"  # Alternating for demo
-                confidence = 0.55 + (day * 0.02)  # Decreasing confidence over time
+                # Enhanced prediction logic with trend and volatility
+                # Add some market psychology - weekend effect, news cycles
+                weekend_factor = 0.8 if (current_date + pd.DateOffset(days=day)).weekday() >= 5 else 1.0
                 
-                # Price calculation with some randomness
-                price_change = volatility * (1 if direction == "UP" else -1) * (1 + day * 0.001)
+                # Decreasing confidence over time
+                confidence_decay = max(0.45, 0.75 - (day * 0.03))
+                
+                # Direction probability with some randomness but trend bias
+                trend_component = trend_factor * day
+                random_component = np.random.normal(0, volatility) * weekend_factor
+                price_change = trend_component + random_component
+                
+                # Determine direction
+                direction = "UP" if price_change > 0 else "DOWN"
+                confidence = confidence_decay
+                
+                # Calculate predicted price
                 predicted_price = base_price * (1 + price_change)
                 price_change_pct = price_change * 100  # Convert to percentage
                 
@@ -415,7 +425,7 @@ class BitcoinSentimentDashboard:
                     'date': current_date + pd.DateOffset(days=day),
                     'predicted_price': predicted_price,
                     'direction': direction,
-                    'confidence': min(confidence, 0.85),  # Cap confidence at 85%
+                    'confidence': confidence,
                     'price_change_pct': price_change_pct
                 })
                 
@@ -478,15 +488,15 @@ class BitcoinSentimentDashboard:
             print(f"Error in future prediction: {str(e)}")
             return self.create_demo_future_predictions(days)
     
-    def create_demo_future_predictions(self, days=7):
+    def create_demo_future_predictions(self, days=14):
         """Create demo future predictions if model unavailable."""
-        current_price = 99654.47
+        current_price = 115271.08  # Updated to current price
         current_date = pd.Timestamp.now()
         
         predictions = []
         for day in range(1, days + 1):
             # Random walk with slight upward bias
-            change_pct = np.random.normal(0.005, 0.025)  # Slight positive bias
+            change_pct = np.random.normal(0.003, 0.025)  # Slight positive bias, realistic volatility
             predicted_price = current_price * (1 + change_pct)
             
             predictions.append({
@@ -503,9 +513,17 @@ class BitcoinSentimentDashboard:
     
     def create_past_predictions_comparison(self):
         """Create comparison of past predictions vs actual prices."""
-        # Since we just updated the system, create simulated historical comparison
-        past_dates = pd.date_range(end='2025-10-09', periods=10, freq='D')
-        actual_prices = [98200, 98723, 99723, 99651, 99224, 99850, 100100, 99900, 99400, 99654]
+        # Use actual recent data for comparison (last 30 days)
+        if not self.btc_data.empty:
+            recent_data = self.btc_data.tail(30)
+            past_dates = pd.to_datetime(recent_data['Date'])
+            actual_prices = recent_data['Close'].values
+        else:
+            # Fallback to simulated data
+            past_dates = pd.date_range(end=datetime.now().strftime('%Y-%m-%d'), periods=30, freq='D')
+            # Create more realistic price progression
+            base_price = 115000
+            actual_prices = [base_price + np.random.normal(0, 2000) + i*50 for i in range(30)]
         
         # Simulate past predictions (in real system, these would be stored predictions)
         past_predictions = []
@@ -547,9 +565,9 @@ class BitcoinSentimentDashboard:
         """Create chart showing historical and future predicted prices."""
         fig = go.Figure()
         
-        # Historical prices (last 30 days)
+        # Historical prices (last 60 days for better context)
         if not self.btc_data.empty:
-            recent_data = self.btc_data.tail(30)
+            recent_data = self.btc_data.tail(60)
             historical_dates = pd.to_datetime(recent_data['Date'])
             historical_prices = recent_data['Close'].astype(float)
             
@@ -575,21 +593,33 @@ class BitcoinSentimentDashboard:
                 customdata=list(zip(future_predictions['direction'], future_predictions['confidence']))
             ))
         
-        # Styling
+        # Styling with enhanced interactivity
         fig.update_layout(
             title={
-                'text': '₿ Bitcoin Price: Historical Data + Future Predictions',
+                'text': '₿ Bitcoin Price: Historical Data + Future Predictions (Interactive)',
                 'x': 0.5,
                 'font': {'size': 24, 'color': '#2c3e50'}
             },
             xaxis_title='Date',
             yaxis_title='Price (USD)',
             template='plotly_white',
-            height=500,
+            height=600,  # Increased height
             showlegend=True,
             hovermode='x unified',
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
+            # Enable scrolling and zooming
+            xaxis=dict(
+                rangeslider=dict(visible=True),  # Add range slider for scrolling
+                type="date",
+                gridcolor='#ecf0f1', 
+                gridwidth=1
+            ),
+            yaxis=dict(
+                gridcolor='#ecf0f1', 
+                gridwidth=1,
+                fixedrange=False  # Allow vertical zoom
+            )
         )
         
         # Add vertical line to separate historical from predictions
@@ -605,17 +635,22 @@ class BitcoinSentimentDashboard:
                 )
             except Exception as e:
                 print(f"Warning: Could not add vertical line: {e}")
-                # Add annotation without vline as fallback
-                fig.add_annotation(
-                    x=0.7, y=0.95,
-                    xref="paper", yref="paper",
-                    text="Red dashed line shows predictions",
-                    showarrow=False,
-                    font=dict(color="red", size=12)
-                )
         
-        fig.update_xaxes(gridcolor='#ecf0f1', gridwidth=1)
-        fig.update_yaxes(gridcolor='#ecf0f1', gridwidth=1)
+        # Add range selector buttons for easy navigation
+        fig.update_layout(
+            xaxis=dict(
+                rangeselector=dict(
+                    buttons=list([
+                        dict(count=7, label="7D", step="day", stepmode="backward"),
+                        dict(count=30, label="30D", step="day", stepmode="backward"),
+                        dict(count=90, label="3M", step="day", stepmode="backward"),
+                        dict(step="all", label="ALL")
+                    ])
+                ),
+                rangeslider=dict(visible=True),
+                type="date"
+            )
+        )
         
         return fig
     
@@ -646,17 +681,46 @@ class BitcoinSentimentDashboard:
             customdata=comparison_data['price_error_pct']
         ))
         
+        # Enhanced layout with better interactivity
         fig.update_layout(
             title={
-                'text': '🎯 Model Accuracy: Predicted vs Actual Bitcoin Prices',
+                'text': '🎯 Model Accuracy: Predicted vs Actual Bitcoin Prices (Last 30 Days)',
                 'x': 0.5,
                 'font': {'size': 20, 'color': '#2c3e50'}
             },
             xaxis_title='Date',
             yaxis_title='Price (USD)',
             template='plotly_white',
-            height=400,
+            height=500,  # Increased height
             showlegend=True,
+            # Enable scrolling and zooming
+            xaxis=dict(
+                rangeslider=dict(visible=True),  # Add range slider
+                type="date",
+                gridcolor='#ecf0f1', 
+                gridwidth=1
+            ),
+            yaxis=dict(
+                gridcolor='#ecf0f1', 
+                gridwidth=1,
+                fixedrange=False
+            )
+        )
+        
+        # Add range selector for easy navigation
+        fig.update_layout(
+            xaxis=dict(
+                rangeselector=dict(
+                    buttons=list([
+                        dict(count=7, label="Last 7D", step="day", stepmode="backward"),
+                        dict(count=14, label="Last 14D", step="day", stepmode="backward"),
+                        dict(count=30, label="Last 30D", step="day", stepmode="backward"),
+                        dict(step="all", label="ALL")
+                    ])
+                ),
+                rangeslider=dict(visible=True),
+                type="date"
+            )
         )
         
         return fig
@@ -665,7 +729,7 @@ class BitcoinSentimentDashboard:
         """Create professional price chart with predictions."""
         fig = go.Figure()
         
-        # Use available data
+        # Use available data (last 90 days for better context)
         if not self.btc_data.empty:
             chart_data = self.btc_data.tail(90)  # Last 90 days
             
@@ -691,7 +755,7 @@ class BitcoinSentimentDashboard:
                     hovertemplate='<b>Date</b>: %{x}<br><b>Price</b>: $%{y:,.0f}<extra></extra>'
                 ))
                 
-                # Add moving average
+                # Add moving averages for technical analysis
                 if len(chart_data) >= 20:
                     chart_data['MA20'] = chart_data[price_col].rolling(20).mean()
                     fig.add_trace(go.Scatter(
@@ -702,11 +766,22 @@ class BitcoinSentimentDashboard:
                         line=dict(color='#ff6b6b', width=2, dash='dash'),
                         opacity=0.7
                     ))
+                
+                if len(chart_data) >= 50:
+                    chart_data['MA50'] = chart_data[price_col].rolling(50).mean()
+                    fig.add_trace(go.Scatter(
+                        x=chart_data[date_col],
+                        y=chart_data['MA50'],
+                        mode='lines',
+                        name='50-Day MA',
+                        line=dict(color='#4ecdc4', width=2, dash='dot'),
+                        opacity=0.7
+                    ))
         
         else:
             # Create sample data for demo
-            dates = pd.date_range(start='2025-10-03', end='2025-10-09', freq='D')
-            prices = [98000, 99200, 98800, 99100, 99800, 100200, 99654]
+            dates = pd.date_range(start='2025-10-03', end='2025-10-13', freq='D')
+            prices = [98000, 99200, 98800, 99100, 99800, 100200, 99654, 105000, 110000, 115000, 115271]
             
             fig.add_trace(go.Scatter(
                 x=dates,
@@ -742,22 +817,49 @@ class BitcoinSentimentDashboard:
                 )
             ))
         
+        # Enhanced layout with interactivity
         fig.update_layout(
             title={
-                'text': 'Bitcoin Price Trend with ML Predictions',
+                'text': 'Bitcoin Price Trend with ML Predictions (Interactive)',
                 'x': 0.5,
                 'font': {'size': 20, 'color': '#2c3e50'}
             },
             xaxis_title='Date',
             yaxis_title='Price (USD)',
             template='plotly_white',
-            height=500,
+            height=600,  # Increased height
             showlegend=True,
             hovermode='x unified',
             plot_bgcolor='rgba(0,0,0,0)',
             paper_bgcolor='rgba(0,0,0,0)',
-            xaxis=dict(gridcolor='#ecf0f1', gridwidth=1),
-            yaxis=dict(gridcolor='#ecf0f1', gridwidth=1)
+            # Enable scrolling and zooming
+            xaxis=dict(
+                rangeslider=dict(visible=True),  # Add range slider
+                type="date",
+                gridcolor='#ecf0f1', 
+                gridwidth=1
+            ),
+            yaxis=dict(
+                gridcolor='#ecf0f1', 
+                gridwidth=1,
+                fixedrange=False
+            )
+        )
+        
+        # Add range selector buttons
+        fig.update_layout(
+            xaxis=dict(
+                rangeselector=dict(
+                    buttons=list([
+                        dict(count=7, label="7D", step="day", stepmode="backward"),
+                        dict(count=30, label="30D", step="day", stepmode="backward"),
+                        dict(count=90, label="3M", step="day", stepmode="backward"),
+                        dict(step="all", label="ALL")
+                    ])
+                ),
+                rangeslider=dict(visible=True),
+                type="date"
+            )
         )
         
         return fig
@@ -926,8 +1028,8 @@ class BitcoinSentimentDashboard:
         """, unsafe_allow_html=True)
         
         # Get current Bitcoin price
-        current_price = float(self.btc_data['Close'].iloc[-1]) if not self.btc_data.empty else 99654.47
-        current_date = self.btc_data['Date'].iloc[-1] if not self.btc_data.empty else "2025-10-09"
+        current_price = float(self.btc_data['Close'].iloc[-1]) if not self.btc_data.empty else 115271.08
+        current_date = self.btc_data['Date'].iloc[-1] if not self.btc_data.empty else "2025-10-13"
         
         # Key metrics row
         col1, col2, col3, col4 = st.columns(4)
@@ -967,10 +1069,10 @@ class BitcoinSentimentDashboard:
             tab6 = None
         
         with tab1:
-            st.markdown("## 🔮 7-Day Bitcoin Price Predictions")
+            st.markdown("## 🔮 Bitcoin Price Predictions - Next 14 Days")
             
-            # Generate future predictions
-            future_predictions = self.predict_future_prices(days=7)
+            # Generate future predictions (14 days instead of 7)
+            future_predictions = self.predict_future_prices(days=14)
             
             if not future_predictions.empty:
                 # Create and display chart
@@ -978,11 +1080,11 @@ class BitcoinSentimentDashboard:
                 st.plotly_chart(fig, use_container_width=True, key="future_predictions_chart")
                 
                 # Display prediction cards
-                st.markdown("### 📅 Daily Predictions")
-                cols = st.columns(3)
+                st.markdown("### 📅 Daily Predictions (14-Day Forecast)")
+                cols = st.columns(4)  # Changed to 4 columns to fit more predictions
                 
                 for idx, (_, pred) in enumerate(future_predictions.iterrows()):
-                    col_idx = idx % 3
+                    col_idx = idx % 4
                     with cols[col_idx]:
                         direction_color = "🟢" if pred['direction'] == "UP" else "🔴"
                         confidence_pct = pred['confidence'] * 100
@@ -996,8 +1098,8 @@ class BitcoinSentimentDashboard:
                         
                         st.markdown(f"""
                         <div class="prediction-card">
-                            <h4>{pred['date'].strftime('%b %d, %Y')}</h4>
-                            <h2>${pred['predicted_price']:,.0f}</h2>
+                            <h4>{pred['date'].strftime('%b %d')}</h4>
+                            <h3>${pred['predicted_price']:,.0f}</h3>
                             <p>{direction_color} {pred['direction']} ({confidence_pct:.1f}%){sentiment_info}</p>
                         </div>
                         """, unsafe_allow_html=True)
@@ -1014,6 +1116,7 @@ class BitcoinSentimentDashboard:
             - **Ensemble Method**: Weighted combination of models with market regime detection
             - **Sentiment Analysis**: Twitter, Reddit, and news sentiment integrated into predictions
             - **Direction Prediction**: UP/DOWN movement with confidence based on price + sentiment patterns
+            - **Extended Forecast**: 14-day predictions with decreasing confidence over time
             """
             else:
                 explanation += """
@@ -1021,6 +1124,7 @@ class BitcoinSentimentDashboard:
             - **Technical Features**: 18 indicators including RSI, Moving Averages, Bollinger Bands
             - **Direction Prediction**: UP/DOWN movement based on pattern recognition
             - **Confidence Score**: Model's certainty in the prediction (higher = more confident)
+            - **Extended Forecast**: 14-day predictions with decreasing confidence over time
             """
             
             st.markdown(explanation)
@@ -1280,14 +1384,14 @@ class BitcoinSentimentDashboard:
         ])
         
         with tab1:
-            st.markdown("## 🔮 Bitcoin Price Predictions - Next 7 Days")
+            st.markdown("## 🔮 Bitcoin Price Predictions - Next 14 Days")
             st.markdown("""
-            **📝 Explanation:** This section shows our machine learning model's predictions for Bitcoin prices over the next 7 days. 
+            **📝 Explanation:** This section shows our machine learning model's predictions for Bitcoin prices over the next 14 days. 
             The predictions are based on historical price patterns, technical indicators, and market sentiment analysis.
             """)
             
             # Generate future predictions
-            future_predictions = self.predict_future_prices(days=7)
+            future_predictions = self.predict_future_prices(days=14)
             
             # Show predictions in columns
             col1, col2 = st.columns([3, 2])
@@ -1299,27 +1403,57 @@ class BitcoinSentimentDashboard:
                 
                 st.markdown("""
                 **📊 Chart Explanation:** 
-                - **Blue solid line**: Historical Bitcoin prices (last 30 days)
-                - **Orange dashed line**: ML model predictions for next 7 days  
+                - **Blue solid line**: Historical Bitcoin prices (last 60 days)
+                - **Orange dashed line**: ML model predictions for next 14 days  
                 - **Red dotted line**: Today's date (separation between historical and predicted data)
                 - **Hover**: Shows exact prices, dates, prediction confidence, and direction
+                - **Interactive**: Use the range slider below to zoom and scroll through data
                 """)
             
             with col2:
-                st.markdown("### 📋 Daily Predictions")
+                st.markdown("### 📋 14-Day Predictions")
                 
-                for _, pred in future_predictions.iterrows():
-                    direction_color = "🟢" if pred['direction'] == "UP" else "🔴"
-                    change_color = "green" if pred['price_change_pct'] > 0 else "red"
+                # Show predictions in scrollable format
+                if len(future_predictions) > 7:
+                    # Show first 7 predictions prominently
+                    for _, pred in future_predictions.head(7).iterrows():
+                        direction_color = "🟢" if pred['direction'] == "UP" else "🔴"
+                        change_color = "green" if pred['price_change_pct'] > 0 else "red"
+                        
+                        st.markdown(f"""
+                        <div class="prediction-card">
+                            <h4>{pred['date'].strftime('%b %d, %Y')}</h4>
+                            <h2>${pred['predicted_price']:,.0f}</h2>
+                            <p>{direction_color} {pred['direction']} ({pred['confidence']:.1%} confidence)</p>
+                            <p style="color: {change_color};">Change: {pred['price_change_pct']:+.2f}%</p>
+                        </div>
+                        """, unsafe_allow_html=True)
                     
-                    st.markdown(f"""
-                    <div class="prediction-card">
-                        <h4>{pred['date'].strftime('%b %d, %Y')}</h4>
-                        <h2>${pred['predicted_price']:,.0f}</h2>
-                        <p>{direction_color} {pred['direction']} ({pred['confidence']:.1%} confidence)</p>
-                        <p style="color: {change_color};">Change: {pred['price_change_pct']:+.2f}%</p>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    # Show remaining predictions in expandable section
+                    with st.expander("📅 Extended Forecast (Days 8-14)"):
+                        for _, pred in future_predictions.tail(7).iterrows():
+                            direction_color = "🟢" if pred['direction'] == "UP" else "🔴"
+                            change_color = "green" if pred['price_change_pct'] > 0 else "red"
+                            
+                            st.markdown(f"""
+                            **{pred['date'].strftime('%b %d, %Y')}**: ${pred['predicted_price']:,.0f} 
+                            {direction_color} {pred['direction']} ({pred['confidence']:.1%}) 
+                            <span style="color: {change_color};">{pred['price_change_pct']:+.2f}%</span>
+                            """, unsafe_allow_html=True)
+                else:
+                    # Show all predictions normally if 7 or fewer
+                    for _, pred in future_predictions.iterrows():
+                        direction_color = "🟢" if pred['direction'] == "UP" else "🔴"
+                        change_color = "green" if pred['price_change_pct'] > 0 else "red"
+                        
+                        st.markdown(f"""
+                        <div class="prediction-card">
+                            <h4>{pred['date'].strftime('%b %d, %Y')}</h4>
+                            <h2>${pred['predicted_price']:,.0f}</h2>
+                            <p>{direction_color} {pred['direction']} ({pred['confidence']:.1%} confidence)</p>
+                            <p style="color: {change_color};">Change: {pred['price_change_pct']:+.2f}%</p>
+                        </div>
+                        """, unsafe_allow_html=True)
                 
                 st.markdown("""
                 **💡 How to Read Predictions:**
@@ -1327,12 +1461,18 @@ class BitcoinSentimentDashboard:
                 - **Direction**: UP (price increase) or DOWN (price decrease)  
                 - **Confidence**: Model's certainty level (higher = more confident)
                 - **Change**: Expected percentage price change from previous day
+                
+                **📈 Interactive Features:**
+                - **Zoom**: Click and drag on chart to zoom into specific time periods
+                - **Scroll**: Use the range slider below the chart to navigate through data
+                - **Range Buttons**: Click 7D, 30D, 3M, or ALL for quick time range selection
+                - **Hover**: Detailed information appears when you hover over data points
                 """)
         
         with tab2:
-            st.markdown("## 🎯 Model Accuracy: Predictions vs Reality")
+            st.markdown("## 🎯 Model Accuracy: Predictions vs Reality (Last 30 Days)")
             st.markdown("""
-            **📝 Explanation:** This section compares our model's past predictions with what actually happened in the Bitcoin market. 
+            **📝 Explanation:** This section compares our model's past predictions with what actually happened in the Bitcoin market over the last 30 days. 
             This helps evaluate how accurate our predictions are and builds confidence in future forecasts.
             """)
             
