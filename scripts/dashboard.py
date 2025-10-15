@@ -293,11 +293,22 @@ class BitcoinSentimentDashboard:
                 if os.path.exists('models/updated_model_results.csv'):
                     self.model_results = pd.read_csv('models/updated_model_results.csv')
                     logger.info("✅ Using updated model results")
+                    print(f"DEBUG: Loaded updated_model_results.csv with {len(self.model_results)} models")
+                elif os.path.exists('models/sentiment_enhanced_model_results.csv'):
+                    self.model_results = pd.read_csv('models/sentiment_enhanced_model_results.csv')
+                    # Process the sentiment-enhanced results to match expected format
+                    if 'Test_Accuracy' in self.model_results.columns:
+                        self.model_results = self.model_results[['Model', 'Test_Accuracy', 'Test_Precision', 'Test_Recall', 'Test_F1']].copy()
+                        self.model_results.columns = ['Model', 'Accuracy', 'Precision', 'Recall', 'F1']
+                    logger.info("✅ Using sentiment-enhanced model results")
+                    print(f"DEBUG: Loaded sentiment_enhanced_model_results.csv with {len(self.model_results)} models: {self.model_results['Model'].tolist()}")
                 else:
                     self.model_results = pd.read_csv('models/model_results.csv')
                     logger.info("⚠️ Using original model results")
+                    print(f"DEBUG: Loaded model_results.csv with {len(self.model_results)} models")
             except Exception as e:
                 logger.warning(f"Failed to load model results: {e}")
+                print(f"DEBUG: Failed to load model results, using sample data: {e}")
                 self.model_results = self.create_sample_results()
                 
         except Exception as e:
@@ -767,6 +778,8 @@ class BitcoinSentimentDashboard:
     
     def create_model_performance_chart(self):
         """Create model performance comparison."""
+        print(f"DEBUG: Creating chart with {len(self.model_results)} models: {self.model_results['Model'].tolist()}")
+        
         fig = go.Figure(data=[
             go.Bar(
                 name='Accuracy',
@@ -787,12 +800,14 @@ class BitcoinSentimentDashboard:
         ])
         
         fig.update_layout(
-            title='Model Performance Comparison',
+            title=f'Model Performance Comparison ({len(self.model_results)} Models)',
             xaxis_title='Models',
             yaxis_title='Performance (%)',
             barmode='group',
             template='plotly_white',
-            height=400
+            height=600,  # Increased height for better visibility
+            xaxis=dict(tickangle=45),  # Rotate labels for better readability
+            margin=dict(b=100)  # Add bottom margin for rotated labels
         )
         
         return fig
@@ -1094,6 +1109,10 @@ class BitcoinSentimentDashboard:
         # Model Performance
         with tab_objects[3]:
             st.markdown('<div class="content-block"><h2 class="section-header">🤖 Model Performance Comparison</h2></div>', unsafe_allow_html=True)
+            
+            # Debug info
+            st.info(f"📊 Displaying performance data for {len(self.model_results)} models: {', '.join(self.model_results['Model'].tolist())}")
+            
             fig = self.create_model_performance_chart()
             st.plotly_chart(fig, use_container_width=True, key="model_performance_chart")
             
@@ -1107,11 +1126,13 @@ class BitcoinSentimentDashboard:
             st.markdown('<div class="content-block">', unsafe_allow_html=True)
             st.markdown("""
             ### 🧠 Model Explanations
-            - **LightGBM**: Best performer with gradient boosting
+            - **LightGBM**: Best performer with gradient boosting and sentiment features
+            - **XGBoost**: Captures complex patterns with high accuracy
             - **Random Forest**: Stable ensemble of decision trees
-            - **XGBoost**: Captures complex patterns
-            - **Logistic Regression**: Linear baseline
-            - **SVM**: Classification boundaries
+            - **Logistic Regression**: Linear baseline model
+            - **SVM**: Support Vector Machine for classification boundaries
+            - **VotingSoft**: Soft voting ensemble combining all models
+            - **Stacking**: Meta-learner combining predictions from base models
             """)
             st.markdown('</div>', unsafe_allow_html=True)
         
