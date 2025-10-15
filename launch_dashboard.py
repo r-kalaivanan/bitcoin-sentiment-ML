@@ -242,26 +242,6 @@ class BitcoinSentimentDashboard:
         }
         if SENTIMENT_ENHANCED:
             self.project_stats['data_sources'].append('Social Media Sentiment Analysis')
-            text-align: center;
-            margin: 1rem 0;
-        }
-        .accuracy-box {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            text-align: center;
-        }
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 2rem;
-        }
-        .stTabs [data-baseweb="tab"] {
-            background-color: #e8f4f8;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
-        }
-        </style>
-        """, unsafe_allow_html=True)
     
     def load_models_and_data(self):
         """Load trained models and data."""
