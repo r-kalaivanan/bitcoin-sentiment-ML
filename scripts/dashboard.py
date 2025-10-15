@@ -512,18 +512,18 @@ class BitcoinSentimentDashboard:
         return pd.DataFrame(predictions)
     
     def create_past_predictions_comparison(self):
-        """Create comparison of past predictions vs actual prices."""
-        # Use actual recent data for comparison (last 30 days)
+        """Create comparison of past predictions vs actual prices with wider span."""
+        # Use much wider span of data (last 180 days - 6 months)
         if not self.btc_data.empty:
-            recent_data = self.btc_data.tail(30)
+            recent_data = self.btc_data.tail(180)
             past_dates = pd.to_datetime(recent_data['Date'])
             actual_prices = recent_data['Close'].values
         else:
             # Fallback to simulated data
-            past_dates = pd.date_range(end=datetime.now().strftime('%Y-%m-%d'), periods=30, freq='D')
+            past_dates = pd.date_range(end=datetime.now().strftime('%Y-%m-%d'), periods=180, freq='D')
             # Create more realistic price progression
             base_price = 115000
-            actual_prices = [base_price + np.random.normal(0, 2000) + i*50 for i in range(30)]
+            actual_prices = [base_price + np.random.normal(0, 2000) + i*50 for i in range(180)]
         
         # Simulate past predictions (in real system, these would be stored predictions)
         past_predictions = []
@@ -655,50 +655,75 @@ class BitcoinSentimentDashboard:
         return fig
     
     def create_prediction_comparison_chart(self, comparison_data):
-        """Create chart comparing past predictions with actual prices."""
+        """Create chart comparing past predictions with actual prices with future predictions."""
         fig = go.Figure()
         
-        # Actual prices
+        # Actual prices (historical)
         fig.add_trace(go.Scatter(
             x=comparison_data['date'],
             y=comparison_data['actual_price'],
             mode='lines+markers',
             name='Actual Prices',
             line=dict(color='#27AE60', width=3),
-            marker=dict(size=8, color='#27AE60'),
+            marker=dict(size=6, color='#27AE60'),
             hovertemplate='<b>Date</b>: %{x}<br><b>Actual Price</b>: $%{y:,.2f}<extra></extra>'
         ))
         
-        # Predicted prices
+        # Predicted prices (historical)
         fig.add_trace(go.Scatter(
             x=comparison_data['date'],
             y=comparison_data['predicted_price'],
             mode='lines+markers',
-            name='Predicted Prices',
+            name='Predicted Prices (Historical)',
             line=dict(color='#E74C3C', width=3, dash='dash'),
-            marker=dict(size=8, color='#E74C3C'),
+            marker=dict(size=6, color='#E74C3C'),
             hovertemplate='<b>Date</b>: %{x}<br><b>Predicted Price</b>: $%{y:,.2f}<br><b>Error</b>: %{customdata:.2f}%<extra></extra>',
             customdata=comparison_data['price_error_pct']
         ))
         
-        # Enhanced layout with better interactivity
+        # Add future predictions (7 days) to the same chart
+        try:
+            future_predictions = self.predict_future_prices(days=7)
+            if not future_predictions.empty:
+                fig.add_trace(go.Scatter(
+                    x=future_predictions['date'],
+                    y=future_predictions['predicted_price'],
+                    mode='lines+markers',
+                    name='Future Predictions (7 Days)',
+                    line=dict(color='#F39C12', width=4, dash='dot'),
+                    marker=dict(size=8, color='#F39C12', symbol='diamond'),
+                    hovertemplate='<b>Date</b>: %{x}<br><b>Future Prediction</b>: $%{y:,.2f}<br><b>Direction</b>: %{customdata[0]}<br><b>Confidence</b>: %{customdata[1]:.1%}<extra></extra>',
+                    customdata=list(zip(future_predictions['direction'], future_predictions['confidence']))
+                ))
+        except Exception as e:
+            print(f"Could not add future predictions to comparison chart: {e}")
+        
+        # Enhanced layout with better horizontal scrolling
         fig.update_layout(
             title={
-                'text': '🎯 Model Accuracy: Predicted vs Actual Bitcoin Prices (Last 30 Days)',
+                'text': '🎯 Model Accuracy: Historical Predictions vs Actual + 7-Day Future Forecast (6 Months)',
                 'x': 0.5,
                 'font': {'size': 20, 'color': '#2c3e50'}
             },
             xaxis_title='Date',
             yaxis_title='Price (USD)',
             template='plotly_white',
-            height=500,  # Increased height
+            height=600,  # Increased height for better visibility
             showlegend=True,
-            # Enable scrolling and zooming
+            # Enhanced scrolling and zooming
             xaxis=dict(
-                rangeslider=dict(visible=True),  # Add range slider
+                rangeslider=dict(
+                    visible=True,
+                    thickness=0.05
+                ),
                 type="date",
                 gridcolor='#ecf0f1', 
-                gridwidth=1
+                gridwidth=1,
+                # Default to show last 60 days but allow scrolling through all 6 months
+                range=[
+                    comparison_data['date'].iloc[-60] if len(comparison_data) >= 60 else comparison_data['date'].iloc[0],
+                    comparison_data['date'].iloc[-1]
+                ]
             ),
             yaxis=dict(
                 gridcolor='#ecf0f1', 
@@ -707,21 +732,39 @@ class BitcoinSentimentDashboard:
             )
         )
         
-        # Add range selector for easy navigation
+        # Add range selector for easy navigation through the wider timespan
         fig.update_layout(
             xaxis=dict(
                 rangeselector=dict(
                     buttons=list([
                         dict(count=7, label="Last 7D", step="day", stepmode="backward"),
-                        dict(count=14, label="Last 14D", step="day", stepmode="backward"),
                         dict(count=30, label="Last 30D", step="day", stepmode="backward"),
-                        dict(step="all", label="ALL")
+                        dict(count=60, label="Last 60D", step="day", stepmode="backward"),
+                        dict(count=90, label="Last 3M", step="day", stepmode="backward"),
+                        dict(count=180, label="All 6M", step="day", stepmode="backward"),
+                        dict(step="all", label="ALL + Future")
                     ])
                 ),
-                rangeslider=dict(visible=True),
+                rangeslider=dict(
+                    visible=True,
+                    thickness=0.05
+                ),
                 type="date"
             )
         )
+        
+        # Add vertical line to separate historical from future predictions
+        try:
+            last_historical_date = comparison_data['date'].iloc[-1]
+            fig.add_vline(
+                x=last_historical_date,
+                line_dash="dot",
+                line_color="red",
+                annotation_text="Today →",
+                annotation_position="top right"
+            )
+        except Exception:
+            pass
         
         return fig
     
