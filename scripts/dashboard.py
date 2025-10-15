@@ -859,15 +859,31 @@ class BitcoinSentimentDashboard:
         
         # Add vertical line to separate historical from future predictions
         try:
-            if len(dates) >= 8:
-                today_line = dates[-8]  # Line before future predictions start
-                fig.add_vline(
-                    x=today_line,
-                    line_dash="dot",
-                    line_color="red",
-                    annotation_text="Today →",
-                    annotation_position="top right"
-                )
+            if not self.btc_data.empty:
+                # Real data case
+                chart_data = self.btc_data.tail(90)
+                date_col = next((col for col in ['Date', 'date'] if col in chart_data.columns), None)
+                if date_col and len(chart_data) >= 8:
+                    today_line = chart_data[date_col].iloc[-8] if len(chart_data) >= 8 else chart_data[date_col].iloc[-1]
+                    fig.add_vline(
+                        x=today_line,
+                        line_dash="dot",
+                        line_color="red",
+                        annotation_text="Today →",
+                        annotation_position="top right"
+                    )
+            else:
+                # Demo data case
+                dates = pd.date_range(start='2025-04-15', end='2025-10-21', freq='D')
+                if len(dates) >= 8:
+                    today_line = dates[-8]  # Line before future predictions start
+                    fig.add_vline(
+                        x=today_line,
+                        line_dash="dot",
+                        line_color="red",
+                        annotation_text="Today →",
+                        annotation_position="top right"
+                    )
         except Exception:
             pass
         
@@ -938,12 +954,7 @@ class BitcoinSentimentDashboard:
                     ])
                 ),
                 rangeslider=dict(visible=True),
-                type="date",
-                # Default to show last 60 days for better initial view
-                range=[
-                    dates[-67] if len(dates) >= 67 else dates[0],  # Show last 60 days + 7 future
-                    dates[-1]
-                ]
+                type="date"
             )
         )
         
