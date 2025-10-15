@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+Chech #!/usr/bin/env python3
 """
 Bitcoin Sentiment ML - Professional Dashboard
 Advanced Bitcoin Prediction System with Sentiment Analysis
