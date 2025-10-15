@@ -30,98 +30,184 @@ except ImportError:
 
 # Set page configuration
 st.set_page_config(
-    page_title="₿ Bitcoin Sentiment ML Dashboard",
+    page_title="₿ Bitcoin Prediction Dashboard",
     page_icon="₿",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for the original awesome UI design
+# Custom CSS for the enhanced beautiful UI design
 st.markdown("""
 <style>
+    /* Import Google Fonts for better typography */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Global styling */
+    .main .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+        max-width: 1200px;
+    }
+    
     /* Main dashboard styling */
     .main-title {
-        font-size: 2.5rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 3rem;
         font-weight: 700;
         color: #ff6b35;
         text-align: center;
         margin-bottom: 1rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+        letter-spacing: -1px;
     }
     
     .subtitle {
-        font-size: 1.1rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 1.2rem;
         color: #666;
         text-align: center;
-        margin-bottom: 2rem;
-        font-style: italic;
+        margin-bottom: 3rem;
+        font-weight: 400;
+        line-height: 1.6;
     }
     
-    /* Metric cards styling */
+    /* Enhanced metric cards styling */
     .metric-card {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 1.5rem;
-        border-radius: 15px;
+        padding: 2rem 1.5rem;
+        border-radius: 20px;
         text-align: center;
-        margin: 0.5rem 0;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        transition: transform 0.3s ease;
+        margin: 0.8rem 0;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
     }
     
     .metric-card:hover {
-        transform: translateY(-2px);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+    }
+    
+    .metric-card:hover::before {
+        opacity: 1;
     }
     
     .metric-value {
-        font-size: 2rem;
-        font-weight: bold;
-        margin: 0.5rem 0;
+        font-family: 'Inter', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 1rem 0;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
     }
     
     .metric-label {
-        font-size: 0.9rem;
-        opacity: 0.9;
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        opacity: 0.95;
         margin-bottom: 0.5rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
     }
     
-    /* Live market intelligence box */
+    /* Enhanced live market intelligence box */
     .live-market-box {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 2rem;
-        border-radius: 15px;
-        margin: 2rem 0;
+        padding: 3rem 2rem;
+        border-radius: 25px;
+        margin: 3rem 0;
         text-align: center;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        box-shadow: 0 16px 40px rgba(0,0,0,0.15);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .live-market-box::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 50%);
+        animation: pulse 4s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 0.8; }
     }
     
     .live-market-title {
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
+        gap: 15px;
+        position: relative;
+        z-index: 1;
     }
     
     .live-market-subtitle {
-        font-size: 1rem;
-        opacity: 0.9;
+        font-family: 'Inter', sans-serif;
+        font-size: 1.1rem;
+        opacity: 0.95;
         margin-bottom: 1rem;
+        line-height: 1.6;
+        position: relative;
+        z-index: 1;
     }
     
-    /* Daily prediction cards */
+    /* Enhanced daily prediction cards */
     .prediction-card {
         background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin: 0.5rem;
+        border-radius: 20px;
+        padding: 2rem 1.5rem;
+        margin: 0.8rem 0.4rem;
         text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        border: 2px solid transparent;
-        transition: all 0.3s ease;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        border: 3px solid transparent;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .prediction-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .prediction-card:hover {
+        transform: translateY(-6px) scale(1.03);
+        box-shadow: 0 16px 48px rgba(0,0,0,0.15);
+    }
+    
+    .prediction-card:hover::before {
+        opacity: 1;
     }
     
     .prediction-card.positive {
@@ -135,30 +221,62 @@ st.markdown("""
     }
     
     .prediction-date {
-        font-size: 0.9rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.95rem;
         color: #666;
-        margin-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     
     .prediction-price {
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin: 0.5rem 0;
+        font-family: 'Inter', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 1rem 0;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
     }
     
     .prediction-change {
-        font-size: 1rem;
-        font-weight: bold;
+        font-family: 'Inter', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
     }
     
-    /* Summary boxes */
+    /* Enhanced summary boxes */
     .summary-box {
         background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin: 1rem 0;
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        margin: 1.5rem 0;
         text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 12px 36px rgba(0,0,0,0.08);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .summary-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .summary-box:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 56px rgba(0,0,0,0.15);
+    }
+    
+    .summary-box:hover::before {
+        opacity: 1;
     }
     
     .summary-box.trend {
@@ -177,42 +295,81 @@ st.markdown("""
     }
     
     .summary-title {
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
-        opacity: 0.9;
+        font-family: 'Inter', sans-serif;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        opacity: 0.95;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        position: relative;
+        z-index: 1;
     }
     
     .summary-value {
-        font-size: 1.5rem;
-        font-weight: bold;
+        font-family: 'Inter', sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        position: relative;
+        z-index: 1;
     }
     
-    /* Tabs styling */
+    /* Enhanced tabs styling */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 1rem;
-        background-color: #f8f9fa;
-        padding: 0.5rem;
-        border-radius: 10px;
+        gap: 1.5rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 1rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.05);
     }
     
     .stTabs [data-baseweb="tab"] {
-        background-color: white;
-        border-radius: 8px;
-        padding: 0.5rem 1rem;
+        background: white;
+        border-radius: 15px;
+        padding: 1rem 1.5rem;
         border: 2px solid transparent;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .stTabs [data-baseweb="tab"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
     }
     
     .stTabs [aria-selected="true"] {
-        background-color: #667eea;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         border-color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
     }
     
     /* Hide default streamlit elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    
+    /* Enhanced spacing for better layout */
+    .element-container {
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Responsive design improvements */
+    @media (max-width: 768px) {
+        .main-title {
+            font-size: 2rem;
+        }
+        .metric-card {
+            margin: 0.5rem 0;
+        }
+        .prediction-card {
+            margin: 0.5rem 0.2rem;
+        }
+    }
     
 </style>
 """, unsafe_allow_html=True)
@@ -309,7 +466,7 @@ class BitcoinSentimentDashboard:
     def create_main_interface_dashboard(self):
         """Create the main interface dashboard with metrics cards."""
         # Main title
-        st.markdown('<h1 class="main-title">₿ Bitcoin Sentiment ML Dashboard</h1>', unsafe_allow_html=True)
+        st.markdown('<h1 class="main-title">₿ Bitcoin Prediction Dashboard</h1>', unsafe_allow_html=True)
         st.markdown('<p class="subtitle">Advanced Machine Learning + Real-time Sentiment Intelligence</p>', unsafe_allow_html=True)
         
         # Get current metrics
@@ -365,9 +522,9 @@ class BitcoinSentimentDashboard:
         </div>
         """, unsafe_allow_html=True)
     
-    def create_ai_predictions_dashboard(self):
-        """Create the AI-Powered 7-Day Bitcoin Predictions dashboard."""
-        st.markdown("## 🤖 AI-Powered 7-Day Bitcoin Predictions")
+    def create_predictions_dashboard(self):
+        """Create the 7-Day Bitcoin Predictions dashboard."""
+        st.markdown("## 🤖 7-Day Bitcoin Predictions")
         
         predictions = self.generate_7_day_predictions()
         
@@ -1143,7 +1300,7 @@ class BitcoinSentimentDashboard:
         # Create tabs for different sections
         tab1, tab2, tab3, tab4, tab5 = st.tabs([
             "🏠 Main Interface", 
-            "🔮 AI Predictions", 
+            "🔮 Predictions", 
             "📊 Advanced Analytics", 
             "⚙️ Enhanced Model Performance", 
             "📋 Detailed Model Metrics"
@@ -1175,8 +1332,8 @@ class BitcoinSentimentDashboard:
                     st.metric("30D Volatility", f"{volatility:.2f}%")
         
         with tab2:
-            # AI-Powered 7-Day Bitcoin Predictions (Figure 4.2)
-            self.create_ai_predictions_dashboard()
+            # 7-Day Bitcoin Predictions (Figure 4.2)
+            self.create_predictions_dashboard()
         
         with tab3:
             # Advanced Analytics with Enhanced Charts
@@ -1309,7 +1466,7 @@ class BitcoinSentimentDashboard:
         st.markdown("---")
         st.markdown("""
         <div style='text-align: center; color: #7f8c8d; padding: 1rem;'>
-            <p><strong>₿ Bitcoin Sentiment ML Dashboard</strong> - Advanced Prediction System</p>
+            <p><strong>₿ Bitcoin Prediction Dashboard</strong> - Advanced Prediction System</p>
             <p>Powered by Machine Learning • Enhanced by Sentiment Analysis • Real-time Intelligence</p>
         </div>
         """, unsafe_allow_html=True)
